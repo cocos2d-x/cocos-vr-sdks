@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="ovr">
+      <UniqueIdentifier>{e949bcb3-d9ee-4330-9762-ec4d23dbed66}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\ovr\OVR_CAPI_0_8_0.h">
+      <Filter>ovr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ovr\OVR_CAPI_Audio.h">
+      <Filter>ovr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ovr\OVR_CAPI_D3D.h">
+      <Filter>ovr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ovr\OVR_CAPI_GL.h">
+      <Filter>ovr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ovr\OVR_CAPI_Keys.h">
+      <Filter>ovr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ovr\OVR_ErrorCode.h">
+      <Filter>ovr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ovr\OVR_Kernel.h">
+      <Filter>ovr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ovr\OVR_Version.h">
+      <Filter>ovr</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\ovr\OVR_CAPI_Util.cpp">
+      <Filter>ovr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ovr\OVR_CAPIShim.c">
+      <Filter>ovr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ovr\OVR_StereoProjection.cpp">
+      <Filter>ovr</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

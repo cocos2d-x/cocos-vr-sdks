@@ -1,0 +1,42 @@
+{
+    "AppDelegate.cpp":{
+        "includes":[
+            "gearvr-sdk/CCVRGearVRRenderer.h"
+        ],
+        "codes":[
+            "auto vrImpl = new VRGearVRRenderer;",
+            "glview->setVR(vrImpl);"
+        ]
+    },
+    "Android.mk":{
+        "local_src_files":[
+            "gearvr-sdk/CCVRGearVRRenderer.cpp",
+            "gearvr-sdk/CCVRGearVRHeadTracker.cpp"
+        ],
+        "shared_libs":[
+            "vrapi"
+        ],
+        "import_module":[
+            "gearvr-sdk/VrApi/Projects/AndroidPrebuilt/jni"
+        ]
+    },
+    "AndroidManifest.xml":{
+        "manifest":[
+            "<uses-sdk android:minSdkVersion=\"19\" android:targetSdkVersion=\"19\" />"
+        ],
+        "application":[
+            "<meta-data android:name=\"com.samsung.android.vr.application.mode\" android:value=\"vr_only\"/>"
+        ]
+    },
+    "copy_files":[
+        {
+            "src": "VR_SDK_ROOT/gearvr-sdk/VrApi/Libs/Android/VrApi.jar",
+            "dst": "ANDROID_PROJECT_DIR/libs"
+        },
+        {
+            "src": "VR_SDK_ROOT/gearvr-sdk/VrApi/Libs/Android/VrApi.jar",
+            "dst": "ANDROID_STUDIO_PROJECT_DIR/app/libs"
+        }
+    ]
+}
+

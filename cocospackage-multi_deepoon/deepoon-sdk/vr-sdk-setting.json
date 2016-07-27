@@ -1,0 +1,47 @@
+{
+    "AppDelegate.cpp":{
+        "includes":[
+            "deepoon-sdk/CCVRDeepoonRenderer.h"
+        ],
+        "codes":[
+            "auto vrImpl = new VRDeepoonRenderer;",
+            "glview->setVR(vrImpl);"
+        ]
+    },
+    "Android.mk":{
+        "local_src_files":[
+            "deepoon-sdk/CCVRDeepoonRenderer.cpp",
+            "deepoon-sdk/CCVRDeepoonHeadTracker.cpp"
+        ],
+        "shared_libs":[
+            "deepoon_sdk"
+        ],
+        "import_module":[
+            "deepoon-sdk/deepoon/prebuild"
+        ]
+    },
+    "AndroidManifest.xml":{
+        "manifest":[
+            "<uses-sdk android:minSdkVersion=\"19\" android:targetSdkVersion=\"19\" />"
+        ],
+        "application":[
+            "<meta-data android:name=\"com.samsung.android.vr.application.mode\" android:value=\"vr_only\"/>"
+        ]
+    },
+    "VRSDKWrapper.java":{
+        "onCreate":[
+            "System.loadLibrary(\"deepoon_sdk\");"
+        ]
+    },
+    "copy_files":[
+        {
+            "src": "VR_SDK_ROOT/deepoon-sdk/deepoon/prebuild/deepoon_sdk.jar",
+            "dst": "ANDROID_PROJECT_DIR/libs"
+        },
+        {
+           "src": "VR_SDK_ROOT/deepoon-sdk/deepoon/prebuild/deepoon_sdk.jar",
+           "dst": "ANDROID_STUDIO_PROJECT_DIR/app/libs"
+        }
+    ]
+}
+

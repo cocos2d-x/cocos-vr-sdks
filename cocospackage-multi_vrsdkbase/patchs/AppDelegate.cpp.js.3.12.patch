@@ -1,0 +1,24 @@
+--- AppDelegate.cpp	2016-07-25 16:52:24.000000000 +0800
++++ AppDelegate.cpp	2016-07-25 17:11:06.000000000 +0800
+@@ -43,6 +43,9 @@
+ #include "cocos/scripting/js-bindings/manual/platform/ios/JavaScriptObjCBridge.h"
+ #endif
+ 
++//VR_PLATFORM_INCLUDES_BEGIN
++//VR_PLATFORM_INCLUDES_END
++
+ USING_NS_CC;
+ using namespace CocosDenshion;
+ 
+@@ -158,6 +161,11 @@
+     ScriptEngineProtocol *engine = ScriptingCore::getInstance();
+     ScriptEngineManager::getInstance()->setScriptEngine(engine);
+     ScriptingCore::getInstance()->runScript("main.js");
++    
++//VR_PLATFORM_SOURCES_BEGIN
++    auto vrImpl = new VRGenericRenderer;
++    glview->setVR(vrImpl);
++//VR_PLATFORM_SOURCES_END
+ 
+     return true;
+ }

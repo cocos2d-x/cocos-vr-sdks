@@ -1,0 +1,10 @@
+{
+    "gvr":{
+        "versions":{
+            "mini_cocospackage_version":"0.8.0",
+            "show_version": "2.0.0_1.0.0",
+            "code": "1000",
+            "update_content": "2016年07月12日更新内容:\n1、新增GoogleVR"
+        }
+    }
+}

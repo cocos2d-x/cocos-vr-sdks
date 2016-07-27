@@ -1,0 +1,115 @@
+{
+    "AppDelegate.cpp":{
+        "includes":[
+            "gvr-sdk/CCVRGvrRenderer.h"
+        ],
+        "codes":[
+            "auto vrImpl = new VRGvrRenderer;",
+            "glview->setVR(vrImpl);"
+        ]
+    },
+    "Android.mk":{
+        "local_src_files":[
+            "gvr-sdk/CCVRGvrRenderer.cpp",
+            "gvr-sdk/CCVRGvrHeadTracker.cpp"
+        ],
+        "shared_libs":[
+            "gvr"
+        ],
+        "import_module":[
+            "gvr-sdk/gvr/prebuild"
+        ]
+    },
+    "AndroidManifest.xml":{
+        "manifest":[
+            "<uses-permission android:name=\"android.permission.VIBRATE\"/>",
+            "<uses-permission android:name=\"android.permission.READ_EXTERNAL_STORAGE\"/>",
+            "<uses-feature android:name=\"android.hardware.sensor.accelerometer\" android:required=\"true\"/>",
+            "<uses-feature android:name=\"android.hardware.sensor.gyroscope\" android:required=\"true\"/>",
+            "<uses-sdk android:minSdkVersion=\"19\" android:targetSdkVersion=\"23\" />",
+            "<uses-feature android:name=\"android.software.vr.mode\" android:required=\"false\"/>",
+            "<uses-feature android:name=\"android.hardware.vr.high_performance\" android:required=\"false\"/>"
+        ]
+    },
+    "VRSDKWrapper.java":{
+        "imports":[
+            "android.view.View",
+            "android.view.WindowManager",
+            "com.google.vr.ndk.base.AndroidCompat",
+            "com.google.vr.ndk.base.GvrLayout",
+            "org.cocos2dx.lib.ResizeLayout"
+        ],
+        "members":[
+            "private GvrLayout gvrLayout;",
+            "private AppActivity appActivity;"
+        ],
+        "functions":[
+            "private void setImmersiveSticky() {",
+            "    appActivity.getWindow()",
+            "            .getDecorView()",
+            "            .setSystemUiVisibility(",
+            "                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE",
+            "                  | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION",
+            "                  | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN",
+            "                  | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION",
+            "                  | View.SYSTEM_UI_FLAG_FULLSCREEN",
+            "                  | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);",
+            "}",
+            "private native long nativeCreate(long gvrContext);"
+        ],
+        "onCreate":[
+            "appActivity = activity;",
+            "gvrLayout = new GvrLayout(appActivity);",
+            "setImmersiveSticky();",
+            "appActivity.getWindow()",
+            "          .getDecorView()",
+            "          .setOnSystemUiVisibilityChangeListener(",
+            "                                              new View.OnSystemUiVisibilityChangeListener() {",
+            "                                                   @Override",
+            "                                                   public void onSystemUiVisibilityChange(int visibility) {",
+            "                                                       if ((visibility & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) {",
+            "                                                           setImmersiveSticky();",
+            "                                                       }",
+            "                                                   }",
+            "                                               });",
+            "ResizeLayout parent = (ResizeLayout)appActivity.getGLSurfaceView().getParent();",
+            "parent.removeView(appActivity.getGLSurfaceView());",
+            "appActivity.getGLSurfaceView().setPreserveEGLContextOnPause(true);",
+            "gvrLayout.setPresentationView(appActivity.getGLSurfaceView());",
+            "AndroidCompat.setVrModeEnabled(appActivity, true);",
+            "nativeCreate(gvrLayout.getGvrApi().getNativeGvrContext());",
+            "appActivity.setContentView(gvrLayout);",
+            "appActivity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);"
+        ],
+        "onDestroy":[
+            "gvrLayout.shutdown();"
+        ],
+        "onResume":[
+            "gvrLayout.onResume();"
+        ],
+        "onPause":[
+            "gvrLayout.onPause();"
+        ]
+    },
+    "files":{
+        "settings.gradle": {
+            "dir": "ANDROID_STUDIO_PROJECT_DIR",
+            "added": [
+                "include ':gvr'",
+                "project(':gvr').projectDir = new File(settingsDir, '../vrsdks/gvr-sdk/gvr/prebuild/gvr')"
+            ]
+        },
+        "build.gradle": {
+            "dir": "ANDROID_STUDIO_PROJECT_DIR/app",
+            "added": [
+                "dependencies {",
+                "    compile project(':gvr')",
+                "}"
+            ],
+            "modified": {
+                "        minSdkVersion 10": "        minSdkVersion 16"
+            }
+        }
+    }
+}
+

@@ -1,0 +1,12 @@
+{
+    "AppDelegate.cpp":{
+        "includes":[
+            "oculus-sdk/CCVROculusRenderer.h"
+        ],
+        "codes":[
+            "auto vrImpl = new VROculusRenderer;",
+            "glview->setVR(vrImpl);"
+        ]
+    }
+}
+
