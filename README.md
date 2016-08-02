@@ -45,15 +45,16 @@ $ python project-path/frameworks/runtime-src/vrsdks/switchVRPlatform.py -p gearv
 ```
 
 4.compile project
+```
+$ cocos compile -p android [--android-studio] --app-abi armeabi-v7a
+```
+>Only suppurt **armeabi-v7a** architecture
 
-```
-$ cocos compile -p android [--android-studio]
-```
 >**gearvr/deepoon/gvr** only support android platform and **gvr** only support Android Studio to compile
 
 For **oculus**, we need use **Visual Studio** to compile, because it only support win32 platform.
->we need manually add the **oculus-sdk** to **Visual Studio**, because I haven't find a way to automatically add a .vcxproj to **Visual Studio**.
+>We need manually add the **oculus-sdk** to **Visual Studio**, because I haven't find a way to automatically add a .vcxproj to **Visual Studio**.
 
->add **vrsdks/oculus-sdk/oculus/proj.win32/liboculus.vcxproj** to solution.
+>Add **vrsdks/oculus-sdk/oculus/proj.win32/liboculus.vcxproj** to solution.
 
->add **vrsdks/oculus-sdk/CCVROculusRenderer.cpp** and **vrsdks/oculus-sdk/CCVROculusHeadTracker.cpp** to project.
+>Add **vrsdks/oculus-sdk/CCVROculusRenderer.cpp** and **vrsdks/oculus-sdk/CCVROculusHeadTracker.cpp** to project.
