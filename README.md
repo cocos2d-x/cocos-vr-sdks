@@ -1,6 +1,13 @@
 cocos-vr-sdks
 ================
 
+| SDK           |  Company       | Runtime Platform |
+|---------------|----------------|------------------|
+| GearVR        | Samsung        | Galaxy Note 5/S6/S6 Edge/S6 Edge+ |
+| GVR(Cardboard And Daydream)           | Google         | Android 4.4 (KitKat) or higher  |
+| DeepoonVR      | Deepoon        | Galaxy Note 5/S6/S6 Edge/S6 Edge+ |
+| OculusVR       | Oculus         | Windows 7+ |
+
 ##How to test
 
 1.Create a new cocos project
