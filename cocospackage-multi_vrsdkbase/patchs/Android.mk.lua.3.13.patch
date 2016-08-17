@@ -1,5 +1,5 @@
---- Android.mk	2016-08-05 14:55:29.000000000 +0800
-+++ Android.mk	2016-08-05 14:56:41.000000000 +0800
+--- Android.mk	2016-08-08 13:47:38.000000000 +0800
++++ Android.mk	2016-08-17 11:32:18.000000000 +0800
 @@ -2,6 +2,8 @@
  
  include $(CLEAR_VARS)
@@ -9,7 +9,7 @@
  LOCAL_MODULE := cocos2dlua_shared
  
  LOCAL_MODULE_FILENAME := libcocos2dlua
-@@ -11,15 +13,22 @@
+@@ -11,18 +13,28 @@
  hellolua/main.cpp
  
  LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../Classes
@@ -32,7 +32,6 @@
  include $(BUILD_SHARED_LIBRARY)
  
  $(call import-module,scripting/lua-bindings/proj.android)
-@@ -27,3 +36,6 @@
  
  # _COCOS_LIB_IMPORT_ANDROID_BEGIN
  # _COCOS_LIB_IMPORT_ANDROID_END
