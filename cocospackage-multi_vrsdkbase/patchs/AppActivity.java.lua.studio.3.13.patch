@@ -1,23 +1,24 @@
---- AppActivity.java	2016-07-25 14:23:35.000000000 +0800
-+++ AppActivity.java	2016-07-25 15:04:58.000000000 +0800
-@@ -51,10 +51,13 @@
+--- AppActivity.java	2016-08-22 16:07:20.000000000 +0800
++++ AppActivity.java	2016-08-22 18:24:31.000000000 +0800
+@@ -26,7 +26,47 @@
+ package org.cocos2dx.lua;
  
- public class AppActivity extends Cocos2dxActivity{
+ import org.cocos2dx.lib.Cocos2dxActivity;
++import android.os.Bundle;
  
+ 
+-public class AppActivity extends Cocos2dxActivity{  
++public class AppActivity extends Cocos2dxActivity{
++    
 +    private VRSDKWrapper mVRSDKWrapper;
-     static String hostIPAdress = "0.0.0.0";
-     @Override
-     protected void onCreate(Bundle savedInstanceState) {
-         super.onCreate(savedInstanceState);
++    
++    @Override
++    protected void onCreate(Bundle savedInstanceState) {
++        super.onCreate(savedInstanceState);
 +        mVRSDKWrapper = new VRSDKWrapper();
 +        mVRSDKWrapper.onCreate(this);
-         
-         if(nativeIsLandScape()) {
-             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
-@@ -124,4 +127,33 @@
-     private static native boolean nativeIsLandScape();
-     private static native boolean nativeIsDebug();
-     
++    }
++    
 +    @Override
 +    protected void onDestroy(){
 +        mVRSDKWrapper.onDestroy();
