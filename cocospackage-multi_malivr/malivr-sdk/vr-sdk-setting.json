@@ -1,0 +1,18 @@
+{
+    "AppDelegate.cpp":{
+        "includes":[
+            "malivr-sdk/CCVRMaliVRRenderer.h"
+        ],
+        "codes":[
+            "auto vrImpl = new VRMaliVRRenderer;",
+            "glview->setVR(vrImpl);"
+        ]
+    },
+    "Android.mk":{
+        "local_src_files":[
+            "malivr-sdk/CCVRMaliVRRenderer.cpp",
+            "malivr-sdk/CCVRMaliVRHeadTracker.cpp"
+        ]
+    }
+}
+
