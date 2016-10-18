@@ -38,6 +38,18 @@
 #include "base/CCEventDispatcher.h"
 #include "base/CCEventType.h"
 
+#include <EGL/egl.h>
+
+#define GL_CHECK(x)                                                                              \
+    x;                                                                                           \
+    {                                                                                            \
+        GLenum glError = glGetError();                                                           \
+        if(glError != GL_NO_ERROR) {                                                             \
+            CCLOG("glGetError() = %i (0x%.8x) at %s:%i\n", glError, glError, __FILE__, __LINE__); \
+            exit(1);                                                                             \
+        }                                                                                        \
+    }
+
 // These are the dimensions of the viewports (in pixels) used
 // when rendering each eye's framebuffer.
 #define View_Resolution_X (Screen_Resolution_X / 2)
@@ -56,7 +68,7 @@
 // as you can ensure that no geometry gets clipped (since
 // that is really jarring for users).
 #define Z_Near (Eye_Display_Distance)
-#define Z_Far  Meter(12.0f)
+#define Z_Far  Meter(5000.0f)
 
 // Instead of recomputing the distortion per frame, we store
 // the distorted texel lookup coordinates in the attributes of
@@ -66,6 +78,8 @@
 // equations are nonlinear.
 #define Warp_Mesh_Resolution_X 64
 #define Warp_Mesh_Resolution_Y 64
+
+#define GL_DRAW_FRAMEBUFFER 0x8CA9
 
 static const char* DISTORTION_V_SHADER = " \
 #version 300 es      \n \
@@ -204,70 +218,107 @@ GLuint link_program(GLuint *shaders, int count)
     return program;
 }
 
+typedef void (GL_APIENTRY* PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVR)(GLenum, GLenum, GLuint, GLint, GLint, GLsizei);
+typedef void (GL_APIENTRY* PFNGLFRAMEBUFFERTEXTUREMULTISAMPLEMULTIVIEWOVR) (GLenum,  GLenum, GLuint, GLint, GLsizei, GLint, GLsizei);
+typedef void (GL_APIENTRYP PFNGLTEXSTORAGE3DEXTPROC) (GLenum target, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth);
+
 Framebuffer make_eye_framebuffer(int width, int height, int num_views)
 {
     Framebuffer result = {};
-    //    result.width = width;
-    //    result.height = height;
-    //
-    //    PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVR glFramebufferTextureMultiviewOVR =
-    //    (PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVR)eglGetProcAddress ("glFramebufferTextureMultiviewOVR");
-    //    PFNGLFRAMEBUFFERTEXTUREMULTISAMPLEMULTIVIEWOVR glFramebufferTextureMultisampleMultiviewOVR =
-    //    (PFNGLFRAMEBUFFERTEXTUREMULTISAMPLEMULTIVIEWOVR)eglGetProcAddress ("glFramebufferTextureMultisampleMultiviewOVR");
-    //
-    //    if (!glFramebufferTextureMultiviewOVR)
-    //    {
-    //        CCLOG("Did not have glFramebufferTextureMultiviewOVR\n");
-    //        return result;
-    //    }
-    //    if (!glFramebufferTextureMultisampleMultiviewOVR)
-    //    {
-    //        CCLOG("Did not have glFramebufferTextureMultisampleMultiviewOVR\n");
-    //    }
-    //
-    //    bool have_multisampled_ext = glFramebufferTextureMultisampleMultiviewOVR != 0;
-    //
-    //    glGenFramebuffers(1, &result.framebuffer);
-    //    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, result.framebuffer);
-    //
-    //    glGenTextures(1, &result.depthbuffer);
-    //    glBindTexture(GL_TEXTURE_2D_ARRAY, result.depthbuffer);
-    //    glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_DEPTH_COMPONENT16, width, height, num_views);
-    //
-    //    if (have_multisampled_ext)
-    //    {
-    //        glFramebufferTextureMultisampleMultiviewOVR(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, result.depthbuffer, 0, Multisample_Samples, 0, num_views);
-    //    }
-    //    else
-    //    {
-    //        glFramebufferTextureMultiviewOVR(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, result.depthbuffer, 0, 0, num_views);
-    //    }
-    //
-    //    glGenTextures(1, &result.colorbuffer);
-    //    glBindTexture(GL_TEXTURE_2D_ARRAY, result.colorbuffer);
-    //    glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RGBA8, width, height, num_views);
-    //    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    //    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    //    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER_EXT);
-    //    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER_EXT);
-    //    GLint border_color[4] = {0, 0, 0, 0};
-    //    glTexParameteriv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR_EXT, border_color);
-    //    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
-    //
-    //    if (have_multisampled_ext)
-    //    {
-    //        glFramebufferTextureMultisampleMultiviewOVR(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, result.colorbuffer, 0, Multisample_Samples, 0, num_views);
-    //    }
-    //    else
-    //    {
-    //        glFramebufferTextureMultiviewOVR(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, result.colorbuffer, 0, 0, num_views);
-    //    }
-    //
-    //    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    //    if (status != GL_FRAMEBUFFER_COMPLETE)
-    //        CCLOG("Framebuffer not complete\n");
-    //    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    result.width = width;
+    result.height = height;
     
+    
+    PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVR glFramebufferTextureMultiviewOVR =
+    (PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVR)eglGetProcAddress ("glFramebufferTextureMultiviewOVR");
+    PFNGLFRAMEBUFFERTEXTUREMULTISAMPLEMULTIVIEWOVR glFramebufferTextureMultisampleMultiviewOVR =
+    (PFNGLFRAMEBUFFERTEXTUREMULTISAMPLEMULTIVIEWOVR)eglGetProcAddress ("glFramebufferTextureMultisampleMultiviewOVR");
+    PFNGLTEXSTORAGE3DEXTPROC glTexStorage3DEXT =
+    (PFNGLTEXSTORAGE3DEXTPROC)eglGetProcAddress ("glTexStorage3DEXT");
+    
+    if (!glFramebufferTextureMultiviewOVR)
+    {
+        CCLOG("Did not have glFramebufferTextureMultiviewOVR\n");
+        exit(EXIT_FAILURE);
+    }
+    if (!glFramebufferTextureMultisampleMultiviewOVR)
+    {
+        CCLOG("Did not have glFramebufferTextureMultisampleMultiviewOVR\n");
+        exit(EXIT_FAILURE);
+    }
+    
+    if (!glTexStorage3DEXT)
+    {
+        CCLOG("Did not have glTexStorage3DEXT\n");
+        exit(EXIT_FAILURE);
+    }
+    
+    bool have_multisampled_ext = glFramebufferTextureMultisampleMultiviewOVR != 0;
+    
+    glGenFramebuffers(1, &result.framebuffer);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, result.framebuffer);
+    
+    glGenTextures(1, &result.depthbuffer);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, result.depthbuffer);
+    glTexStorage3DEXT(GL_TEXTURE_2D_ARRAY, 1, GL_DEPTH_COMPONENT16, width, height, num_views);
+    
+    if (have_multisampled_ext)
+    {
+        glFramebufferTextureMultisampleMultiviewOVR(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, result.depthbuffer, 0, Multisample_Samples, 0, num_views);
+    }
+    else
+    {
+        glFramebufferTextureMultiviewOVR(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, result.depthbuffer, 0, 0, num_views);
+    }
+    
+    glGenTextures(1, &result.colorbuffer);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, result.colorbuffer);
+    glTexStorage3DEXT(GL_TEXTURE_2D_ARRAY, 1, GL_RGBA8_OES, width, height, num_views);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER_EXT);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER_EXT);
+    GLint border_color[4] = {0, 0, 0, 0};
+    glTexParameteriv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR_EXT, border_color);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+    
+    if (have_multisampled_ext)
+    {
+        glFramebufferTextureMultisampleMultiviewOVR(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, result.colorbuffer, 0, Multisample_Samples, 0, num_views);
+    }
+    else
+    {
+        glFramebufferTextureMultiviewOVR(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, result.colorbuffer, 0, 0, num_views);
+    }
+    
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE)
+        CCLOG("Framebuffer not complete\n");
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    
+    return result;
+}
+
+// This computes a general frustum given the distance
+// from the viewer's eye to the display, and the corners
+// of that eye's screen half relative to the eye.
+// z_near and z_far decide the near and far clipping planes.
+Mat4 make_frustum_screen_viewer(float eye_display_distance,
+                                float left,
+                                float right,
+                                float bottom,
+                                float top,
+                                float z_near,
+                                float z_far)
+{
+    Mat4 result = Mat4::ZERO;
+    result.m[0] = 2.0f * eye_display_distance / (right - left);
+    result.m[5] = 2.0f * eye_display_distance / (top - bottom);
+    result.m[8] = (right + left) / (right - left);
+    result.m[9] = (top + bottom) / (top - bottom);
+    result.m[10] = (z_near + z_far) / (z_near - z_far);
+    result.m[11] = -1.0f;
+    result.m[14] = 2.0f * z_near * z_far / (z_near - z_far);
     return result;
 }
 
@@ -370,6 +421,7 @@ GLuint make_warp_mesh(LensConfig config)
 VRMaliVRRenderer::VRMaliVRRenderer()
 {
     _headTracker = new VRMaliVRHeadTracker;
+    Director::getInstance()->resetMatrixStack(4);
 }
 
 VRMaliVRRenderer::~VRMaliVRRenderer()
@@ -404,7 +456,9 @@ void VRMaliVRRenderer::setup(GLView* glview)
     glGenVertexArrays(1, &_vrApp.vao);
     glBindVertexArray(_vrApp.vao);
     
-    _vrApp.fb = make_eye_framebuffer(Eye_Fb_Resolution_X, Eye_Fb_Resolution_Y, Num_Views);
+    auto vp = Camera::getDefaultViewport();
+    
+    _vrApp.fb = make_eye_framebuffer(vp._width, vp._height, Num_Views);
     
     // The coefficients below may be calibrated by photographing an
     // image containing straight lines, both vertical and horizontal,
@@ -495,11 +549,6 @@ void VRMaliVRRenderer::setup(GLView* glview)
     _vrApp.u_distort_layer_index = glGetUniformLocation(_vrApp.program_distort, "layer_index");
     _vrApp.u_distort_framebuffer = glGetUniformLocation(_vrApp.program_distort, "framebuffer");
     
-//    get_attrib_location (cube, position);
-//    get_attrib_location (cube, normal);
-//    get_uniform_location(cube, projection);
-//    get_uniform_location(cube, view);
-//    get_uniform_location(cube, model);
 }
 
 void VRMaliVRRenderer::cleanup()
@@ -513,39 +562,83 @@ VRIHeadTracker* cocos2d::VRMaliVRRenderer::getHeadTracker()
 
 void VRMaliVRRenderer::render(Scene* scene, Renderer* renderer)
 {
-    glEnable(GL_DEPTH_TEST);
-    glDepthMask(GL_TRUE);
+    GL_CHECK(glEnable(GL_DEPTH_TEST));
+    GL_CHECK(glDepthMask(GL_TRUE));
+    GL_CHECK(glClearColor(0.15f, 0.17f, 0.2f, 1.0f));
     
-    glBindFramebuffer(GL_FRAMEBUFFER, _vrApp.fb.framebuffer);
+    float camera_z = Centimeter(0.0f);
+    float camera_y = Centimeter(0.0f);
+    
+    Mat4 eyeTransforms[4];
+    Mat4 eyeProjections[4];
+    Mat4::createTranslation(-Eye_IPD / 2.0f, +camera_y, +camera_z, &eyeTransforms[0]);
+    Mat4::createTranslation(+Eye_IPD / 2.0f, +camera_y, +camera_z, &eyeTransforms[1]);
+    Mat4::createTranslation(-Eye_IPD / 2.0f, +camera_y, +camera_z, &eyeTransforms[2]);
+    Mat4::createTranslation(+Eye_IPD / 2.0f, +camera_y, +camera_z, &eyeTransforms[3]);
+    
+    eyeProjections[0] = make_frustum_screen_viewer(
+                                                   Eye_Display_Distance,
+                                                   -(Screen_Size_X - Eye_IPD) / 2.0f,
+                                                   +(Eye_IPD / 2.0f),
+                                                   -Screen_Size_Y / 2.0f,
+                                                   +Screen_Size_Y / 2.0f,
+                                                   Z_Near, Z_Far);
+    eyeProjections[1] = make_frustum_screen_viewer(
+                                                   Eye_Display_Distance,
+                                                   -(Eye_IPD / 2.0f),
+                                                   +(Screen_Size_X - Eye_IPD) / 2.0f,
+                                                   -Screen_Size_Y / 2.0f,
+                                                   +Screen_Size_Y / 2.0f,
+                                                   Z_Near, Z_Far);
+    
+    float right_midpoint = -((Screen_Size_X/4.0f) - (Eye_IPD / 2.0f));
+    float left_midpoint = (Screen_Size_X/4.0f) - (Eye_IPD / 2.0f);
+    eyeProjections[2] = make_frustum_screen_viewer(
+                                                   Eye_Display_Distance,
+                                                   right_midpoint - (Screen_Size_X/8.0f),
+                                                   right_midpoint + (Screen_Size_X/8.0f),
+                                                   -Screen_Size_Y / 4.0f,
+                                                   +Screen_Size_Y / 4.0f,
+                                                   Z_Near, Z_Far);
+    eyeProjections[3] = make_frustum_screen_viewer(
+                                                   Eye_Display_Distance,
+                                                   left_midpoint - (Screen_Size_X/8.0f),
+                                                   left_midpoint + (Screen_Size_X/8.0f),
+                                                   -Screen_Size_Y / 4.0f,
+                                                   +Screen_Size_Y / 4.0f,
+                                                   Z_Near, Z_Far);
+    
+    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, _vrApp.fb.framebuffer));
+    GL_CHECK(glViewport(0, 0, _vrApp.fb.width, _vrApp.fb.height));
+    GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+    
     Camera::setDefaultViewport(experimental::Viewport(0, 0, _vrApp.fb.width, _vrApp.fb.height));
-    glClearColor(0.125f, 0.125f, 0.125f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    //scene->render(renderer, transform.getInversed(), &_eyeProjection);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    scene->render(renderer, eyeTransforms, eyeProjections, 4);
+    
+    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
     
     ////////////////////////////
     // Distortion shader
     
-    glDisable(GL_DEPTH_TEST);
-    glDepthMask(GL_FALSE);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    GL_CHECK(glDisable(GL_DEPTH_TEST));
+    GL_CHECK(glDepthMask(GL_FALSE));
+    GL_CHECK(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));
+    GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
     
-    glUseProgram(_vrApp.program_distort);
-    glActiveTexture(GL_TEXTURE0);
-    glUniform1f(_vrApp.u_distort_framebuffer, 0);
+    GL_CHECK(glUseProgram(_vrApp.program_distort));
+    GL_CHECK(glActiveTexture(GL_TEXTURE0));
+    GL_CHECK(glUniform1i(_vrApp.u_distort_framebuffer, 0));
     
 #define attribfv(prog, name, n, stride, offset) \
-glEnableVertexAttribArray(_vrApp.a_##prog##_##name); \
-glVertexAttribPointer(_vrApp.a_##prog##_##name, n, GL_FLOAT, GL_FALSE, \
-stride * sizeof(GLfloat), (void*)(offset * sizeof(GLfloat)));
+    GL_CHECK(glEnableVertexAttribArray(_vrApp.a_##prog##_##name)); \
+    GL_CHECK(glVertexAttribPointer(_vrApp.a_##prog##_##name, n, GL_FLOAT, GL_FALSE, \
+                            stride * sizeof(GLfloat), (void*)(offset * sizeof(GLfloat))));
     
     // Left eye
-    glViewport(0, 0, View_Resolution_X, View_Resolution_Y);
-    //glBindTexture(GL_TEXTURE_2D_ARRAY, _vrApp.fb.colorbuffer);
-    glUniform1f(_vrApp.u_distort_layer_index, 0);
-    
-    glBindBuffer(GL_ARRAY_BUFFER, _vrApp.warp_mesh[0]);
+    GL_CHECK(glViewport(0, 0, View_Resolution_X, View_Resolution_Y));
+    GL_CHECK(glBindTexture(GL_TEXTURE_2D_ARRAY, _vrApp.fb.colorbuffer));
+    GL_CHECK(glUniform1i(_vrApp.u_distort_layer_index, 0));
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, _vrApp.warp_mesh[0]));
     attribfv(distort, position,          2, 14, 0);
     attribfv(distort, uv_red_low_res,    2, 14, 2);
     attribfv(distort, uv_green_low_res,  2, 14, 4);
@@ -553,12 +646,12 @@ stride * sizeof(GLfloat), (void*)(offset * sizeof(GLfloat)));
     attribfv(distort, uv_red_high_res,   2, 14, 8);
     attribfv(distort, uv_green_high_res, 2, 14, 10);
     attribfv(distort, uv_blue_high_res,  2, 14, 12);
-    glDrawArrays(GL_TRIANGLES, 0, Warp_Mesh_Resolution_X * Warp_Mesh_Resolution_Y * 6);
+    GL_CHECK(glDrawArrays(GL_TRIANGLES, 0, Warp_Mesh_Resolution_X * Warp_Mesh_Resolution_Y * 6));
     
     // Right eye
-    glViewport(View_Resolution_X, 0, View_Resolution_X, View_Resolution_Y);
-    glUniform1f(_vrApp.u_distort_layer_index, 1);
-    glBindBuffer(GL_ARRAY_BUFFER, _vrApp.warp_mesh[1]);
+    GL_CHECK(glViewport(View_Resolution_X, 0, View_Resolution_X, View_Resolution_Y));
+    GL_CHECK(glUniform1i(_vrApp.u_distort_layer_index, 1));
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, _vrApp.warp_mesh[1]));
     attribfv(distort, position,          2, 14, 0);
     attribfv(distort, uv_red_low_res,    2, 14, 2);
     attribfv(distort, uv_green_low_res,  2, 14, 4);
@@ -566,7 +659,9 @@ stride * sizeof(GLfloat), (void*)(offset * sizeof(GLfloat)));
     attribfv(distort, uv_red_high_res,   2, 14, 8);
     attribfv(distort, uv_green_high_res, 2, 14, 10);
     attribfv(distort, uv_blue_high_res,  2, 14, 12);
-    glDrawArrays(GL_TRIANGLES, 0, Warp_Mesh_Resolution_X * Warp_Mesh_Resolution_Y * 6);
+    GL_CHECK(glDrawArrays(GL_TRIANGLES, 0, Warp_Mesh_Resolution_X * Warp_Mesh_Resolution_Y * 6));
+    
+    GL_CHECK(glViewport(0, 0, _vrApp.fb.width, _vrApp.fb.height));
 }
 
 NS_CC_END
