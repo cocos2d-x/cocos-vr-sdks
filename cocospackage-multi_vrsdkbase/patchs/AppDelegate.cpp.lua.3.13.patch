@@ -1,5 +1,5 @@
---- AppDelegate.cpp	2016-08-05 11:58:57.000000000 +0800
-+++ AppDelegate.cpp	2016-08-05 14:52:10.000000000 +0800
+--- AppDelegate.cpp	2016-09-26 14:57:13.000000000 +0800
++++ AppDelegate.cpp	2016-10-20 12:13:04.000000000 +0800
 @@ -3,6 +3,8 @@
  #include "audio/include/SimpleAudioEngine.h"
  #include "cocos2d.h"
@@ -9,17 +9,16 @@
  
  using namespace CocosDenshion;
  
-@@ -65,7 +67,12 @@
-     {
-         return false;
-     }
--
-+    
+@@ -61,6 +63,12 @@
+     //LuaStack* stack = engine->getLuaStack();
+     //register_custom_function(stack->getLuaState());
+ 
 +    auto glview = Director::getInstance()->getOpenGLView();
 +//VR_PLATFORM_SOURCES_BEGIN
 +    auto vrImpl = new VRGenericRenderer;
 +    glview->setVR(vrImpl);
 +//VR_PLATFORM_SOURCES_END
-     return true;
- }
- 
++    
+     if (engine->executeScriptFile("src/main.lua"))
+     {
+         return false;
