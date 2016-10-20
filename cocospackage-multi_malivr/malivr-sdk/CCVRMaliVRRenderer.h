@@ -51,7 +51,7 @@ NS_CC_BEGIN
 // rendering the scene. The values for these will balance visual
 // quality and performance. The framebuffers will be scaled down
 // or up to fit inside the viewports.
-#define Eye_Fb_Resolution_X 1280
+#define Eye_Fb_Resolution_X (Screen_Resolution_X / 2)
 #define Eye_Fb_Resolution_Y 1440
 
 // If multisampling is available on the device the framebuffers
@@ -71,7 +71,7 @@ NS_CC_BEGIN
 
 // This should be set equal to the distance between the display
 // and the center point of the viewer's eye.
-#define Eye_Display_Distance Centimeter(8.0f)
+#define Eye_Display_Distance Centimeter(3.0f)
 
 // Defining border color enums in case the headers are not up to date for using the android extension pack.
 #ifndef GL_TEXTURE_BORDER_COLOR_EXT

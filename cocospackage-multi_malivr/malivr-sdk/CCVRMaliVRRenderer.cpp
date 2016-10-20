@@ -40,15 +40,18 @@
 
 #include <EGL/egl.h>
 
+#if !defined(COCOS2D_DEBUG) || COCOS2D_DEBUG == 0
+#define GL_CHECK(x) x
+#elif COCOS2D_DEBUG == 1
 #define GL_CHECK(x)                                                                              \
     x;                                                                                           \
     {                                                                                            \
         GLenum glError = glGetError();                                                           \
         if(glError != GL_NO_ERROR) {                                                             \
             CCLOG("glGetError() = %i (0x%.8x) at %s:%i\n", glError, glError, __FILE__, __LINE__); \
-            exit(1);                                                                             \
         }                                                                                        \
     }
+#endif
 
 // These are the dimensions of the viewports (in pixels) used
 // when rendering each eye's framebuffer.
@@ -456,9 +459,9 @@ void VRMaliVRRenderer::setup(GLView* glview)
     glGenVertexArrays(1, &_vrApp.vao);
     glBindVertexArray(_vrApp.vao);
     
-    auto vp = Camera::getDefaultViewport();
+    auto visibleSize = Director::getInstance()->getVisibleSize();
     
-    _vrApp.fb = make_eye_framebuffer(vp._width, vp._height, Num_Views);
+    _vrApp.fb = make_eye_framebuffer(Eye_Fb_Resolution_X, Eye_Fb_Resolution_Y, Num_Views);
     
     // The coefficients below may be calibrated by photographing an
     // image containing straight lines, both vertical and horizontal,
@@ -608,14 +611,14 @@ void VRMaliVRRenderer::render(Scene* scene, Renderer* renderer)
                                                    +Screen_Size_Y / 4.0f,
                                                    Z_Near, Z_Far);
     
-    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, _vrApp.fb.framebuffer));
+    GL_CHECK(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _vrApp.fb.framebuffer));
     GL_CHECK(glViewport(0, 0, _vrApp.fb.width, _vrApp.fb.height));
     GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
     
     Camera::setDefaultViewport(experimental::Viewport(0, 0, _vrApp.fb.width, _vrApp.fb.height));
     scene->render(renderer, eyeTransforms, eyeProjections, 4);
     
-    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+    GL_CHECK(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0));
     
     ////////////////////////////
     // Distortion shader
@@ -660,6 +663,9 @@ void VRMaliVRRenderer::render(Scene* scene, Renderer* renderer)
     attribfv(distort, uv_green_high_res, 2, 14, 10);
     attribfv(distort, uv_blue_high_res,  2, 14, 12);
     GL_CHECK(glDrawArrays(GL_TRIANGLES, 0, Warp_Mesh_Resolution_X * Warp_Mesh_Resolution_Y * 6));
+    
+    GL_CHECK(glEnable(GL_DEPTH_TEST));
+    GL_CHECK(glDepthMask(GL_TRUE));
     
     GL_CHECK(glViewport(0, 0, _vrApp.fb.width, _vrApp.fb.height));
 }
