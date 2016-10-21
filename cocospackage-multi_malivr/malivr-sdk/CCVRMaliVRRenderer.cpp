@@ -424,7 +424,7 @@ GLuint make_warp_mesh(LensConfig config)
 VRMaliVRRenderer::VRMaliVRRenderer()
 {
     _headTracker = new VRMaliVRHeadTracker;
-    Director::getInstance()->resetMatrixStack(4);
+    Director::getInstance()->initProjectionMatrixStack(4);
 }
 
 VRMaliVRRenderer::~VRMaliVRRenderer()
