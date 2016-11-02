@@ -6,6 +6,7 @@ cocos-vr-sdks
 | GearVR        | Samsung        | Galaxy Note 5/S6/S6 Edge/S6 Edge+ |
 | GVR(Cardboard And Daydream)           | Google         | Android 4.4 (KitKat) or higher  |
 | DeepoonVR      | Deepoon        | Galaxy Note 5/S6/S6 Edge/S6 Edge+ |
+| MaliVR      | ARM        | Mali GPU and Android 6.0 (KitKat) or higher |
 | OculusVR       | Oculus         | Windows 7+ |
 
 ##How to test
@@ -19,24 +20,28 @@ $ cocos new project-name -l cpp[lua][js]
 2.Use cocos package manager to install sdks
 
 ```
-$ cocos package import -v -b vrsdkbase -p project-path --staging
+$ cocos package import -v -b vrsdkbase -p project-path --anysdk
 ```
 >Need install **vrsdkbase** first
 
 ```
-$ cocos package import -v -b gearvr -p project-path --staging
+$ cocos package import -v -b gearvr -p project-path --anysdk
 ```
 
 ```
-$ cocos package import -v -b deepoon -p project-path --staging
+$ cocos package import -v -b deepoon -p project-path --anysdk
 ```
 
 ```
-$ cocos package import -v -b gvr -p project-path --staging
+$ cocos package import -v -b gvr -p project-path --anysdk
 ```
 
 ```
-$ cocos package import -v -b oculus -p project-path --staging
+$ cocos package import -v -b malivr -p project-path --anysdk
+```
+
+```
+$ cocos package import -v -b oculus -p project-path --anysdk
 ```
 
 3.Use **switchVRPlatform.py** to switch vr platform
